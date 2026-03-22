@@ -1,5 +1,6 @@
 import {
   Bell,
+  Cake,
   Heart,
   Play,
   Share2,
@@ -12,53 +13,208 @@ import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CountdownUnit } from "./components/CountdownUnit";
 import { Sparkles } from "./components/Sparkles";
-import { useBirthdayTune } from "./hooks/useBirthdayTune";
 import { useCountdown } from "./hooks/useCountdown";
 
 const BIRTHDAY = new Date("2026-04-05T00:00:00");
+const DOB = new Date("2009-04-05");
+const DAYS_ALIVE = Math.floor(
+  (BIRTHDAY.getTime() - DOB.getTime()) / (1000 * 60 * 60 * 24),
+);
 
 const VIDEOS = [
   "/assets/VID_20260321_105637_164-1.mp4",
   "/assets/VID_20260321_105647_786-1.mp4",
 ];
 
-const PHOTOS = [
-  "/assets/uploads/IMG_20260321_232601_440-1.jpg",
-  "/assets/uploads/IMG_20260321_232624_941-2.jpg",
-  "/assets/uploads/Screenshot_20260320-073950_Instagram-3.png",
-];
-
-const PHOTO_LABELS = ["Always Glowing", "Nights to Remember", "Just Being You"];
+// Audio source from video
+const AUDIO_SRC = "/assets/VID_20260321_105647_786-1.mp4";
 
 const MEMORIES = [
   {
-    src: PHOTOS[0],
+    src: "/assets/uploads/IMG_20260321_232601_440-1.jpg",
     title: "Always Glowing",
     sub: "The way you light up every photo.",
   },
   {
-    src: PHOTOS[1],
+    src: "/assets/uploads/IMG_20260321_232624_941-2.jpg",
     title: "Nights to Remember",
     sub: "You make ordinary nights feel like celebrations.",
   },
   {
-    src: PHOTOS[2],
+    src: "/assets/uploads/Screenshot_20260320-073950_Instagram-3.png",
     title: "Just Being You",
     sub: "Effortlessly yourself — that's your superpower.",
   },
+  {
+    src: "/assets/uploads/IMG_20250921_165833_555-1.jpg",
+    title: "Golden Hour",
+    sub: "You were made for moments like this.",
+  },
+  {
+    src: "/assets/uploads/IMG_20250801_003250_654-2.jpg",
+    title: "Late Night Vibes",
+    sub: "The best memories happen when the clock doesn't matter.",
+  },
+  {
+    src: "/assets/uploads/IMG_20250801_003114_361-3.jpg",
+    title: "Squad Energy",
+    sub: "Better together, always.",
+  },
+  {
+    src: "/assets/uploads/IMG_20250801_003110_228-4.jpg",
+    title: "Candid & Carefree",
+    sub: "The real ones are always the best ones.",
+  },
+  {
+    src: "/assets/uploads/IMG_20250801_003107_147-5.jpg",
+    title: "Pure Joy",
+    sub: "This smile — absolutely infectious.",
+  },
+  {
+    src: "/assets/uploads/IMG_20250801_003146_413-6.jpg",
+    title: "Unfiltered",
+    sub: "No filter needed when you're this real.",
+  },
+  {
+    src: "/assets/uploads/IMG_20250801_003347_815-7.jpg",
+    title: "Main Character",
+    sub: "Because that's exactly what you are.",
+  },
+  {
+    src: "/assets/uploads/IMG_20251206_232657_984-8.jpg",
+    title: "December Magic",
+    sub: "Some moments just feel like they were meant to last.",
+  },
 ];
+
+const VIDEO_MEMORIES = [
+  {
+    src: "/assets/VID_20260321_105637_164-1.mp4",
+    poster: "/assets/uploads/IMG_20260321_232601_440-1.jpg",
+    title: "A Moment in Time",
+    sub: "Some moments are better experienced than described.",
+  },
+  {
+    src: "/assets/VID_20260321_105647_786-1.mp4",
+    poster: "/assets/uploads/IMG_20260321_232624_941-2.jpg",
+    title: "Just Like That",
+    sub: "The real ones never need a reason to make you smile.",
+  },
+];
+
+const AGE_STATS = [
+  { value: "17", label: "Years Young" },
+  { value: `${DAYS_ALIVE.toLocaleString()}+`, label: "Days Alive" },
+  { value: "∞", label: "Memories Made" },
+  { value: "1", label: "Best Day Ahead" },
+];
+
+const SLIDESHOW_PHOTOS = MEMORIES.map((m) => m.src);
+
+function VideoCard({
+  video,
+  index,
+}: {
+  video: (typeof VIDEO_MEMORIES)[0];
+  index: number;
+}) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const handleClick = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (isPlaying) {
+      v.pause();
+      setIsPlaying(false);
+    } else {
+      v.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  };
+
+  const handleEnded = () => setIsPlaying(false);
+
+  return (
+    <motion.div
+      {...{ "data-ocid": `gallery.item.${MEMORIES.length + index + 1}` }}
+      whileHover={{ scale: 1.04, zIndex: 10 }}
+      transition={{ duration: 0.3 }}
+      className="gallery-card flex-shrink-0 relative rounded-lg overflow-hidden snap-start cursor-pointer"
+      style={{
+        width: "clamp(200px, 30vw, 320px)",
+        aspectRatio: "2/3",
+        border: "1px solid #2A2A2A",
+      }}
+      onClick={handleClick}
+    >
+      <video
+        ref={videoRef}
+        src={video.src}
+        poster={video.poster}
+        muted
+        playsInline
+        onEnded={handleEnded}
+        className="w-full h-full object-cover"
+      />
+      {/* Gradient overlay */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 50%)",
+        }}
+      />
+      {/* Badge */}
+      <div
+        className="absolute top-3 left-3 px-2 py-0.5 rounded text-xs font-bold uppercase"
+        style={{ backgroundColor: "#E50914", color: "#fff" }}
+      >
+        Video
+      </div>
+      {/* Play icon overlay */}
+      <AnimatePresence>
+        {!isPlaying && (
+          <motion.div
+            key="play-icon"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: "rgba(229,9,20,0.85)" }}
+            >
+              <Play size={28} fill="white" color="white" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Title */}
+      <div className="absolute bottom-0 left-0 right-0 p-4">
+        <p className="font-semibold text-sm text-white">{video.title}</p>
+        <p className="text-xs" style={{ color: "#B3B3B3" }}>
+          {video.sub}
+        </p>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function App() {
   const [currentVideo, setCurrentVideo] = useState(0);
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [_currentSlide, setCurrentSlide] = useState(0);
   const [showStartOverlay, setShowStartOverlay] = useState(true);
   const [activeSection, setActiveSection] = useState("home");
+  const [isMuted, setIsMuted] = useState(false);
+  const [isStarted, setIsStarted] = useState(false);
   const galleryRef = useRef<HTMLDivElement>(null);
   const aboutRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const audioRef = useRef<HTMLVideoElement>(null);
 
   const { days, hours, minutes, seconds, isPast } = useCountdown(BIRTHDAY);
-  const { isMuted, isStarted, start, toggleMute } = useBirthdayTune();
 
   // Cycle video every 18s
   useEffect(() => {
@@ -69,11 +225,11 @@ export default function App() {
     return () => clearInterval(t);
   }, [showStartOverlay]);
 
-  // Auto-slide photos every 6s
+  // Auto-slide photos (for overlay state)
   useEffect(() => {
     if (showStartOverlay) return;
     const t = setInterval(() => {
-      setCurrentSlide((p) => (p + 1) % PHOTOS.length);
+      setCurrentSlide((p) => (p + 1) % SLIDESHOW_PHOTOS.length);
     }, 6000);
     return () => clearInterval(t);
   }, [showStartOverlay]);
@@ -91,11 +247,24 @@ export default function App() {
     });
   }, [currentVideo]);
 
+  // Mute/unmute audio
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
   const handleStart = useCallback(() => {
     setShowStartOverlay(false);
-    start();
+    setIsStarted(true);
     videoRefs.current[0]?.play().catch(() => {});
-  }, [start]);
+    if (audioRef.current) {
+      audioRef.current.muted = false;
+      audioRef.current.play().catch(() => {});
+    }
+  }, []);
+
+  const toggleMute = useCallback(() => setIsMuted((m) => !m), []);
 
   const scrollTo = useCallback(
     (ref: React.RefObject<HTMLDivElement | null>) => {
@@ -129,6 +298,16 @@ export default function App() {
         fontFamily: "'Inter', sans-serif",
       }}
     >
+      {/* Hidden audio player using video file */}
+      <video
+        ref={audioRef}
+        src={AUDIO_SRC}
+        loop
+        muted
+        playsInline
+        style={{ display: "none" }}
+      />
+
       {/* Entrance overlay */}
       <AnimatePresence>
         {showStartOverlay && (
@@ -161,14 +340,17 @@ export default function App() {
               >
                 Anvi&apos;s Birthday
               </h1>
-              <p style={{ color: "#B3B3B3" }} className="mb-8 text-lg">
+              <p style={{ color: "#B3B3B3" }} className="mb-2 text-lg">
                 Something special is waiting for you inside.
+              </p>
+              <p className="mb-8 text-sm" style={{ color: "#E50914" }}>
+                Turning 17 · April 5, 2026
               </p>
               <button
                 type="button"
                 {...ocid("start.primary_button")}
                 onClick={handleStart}
-                className="flex items-center gap-2 px-10 py-4 rounded font-bold text-lg uppercase tracking-wider transition-all hover:brightness-110 hover:scale-105"
+                className="flex items-center gap-2 px-10 py-4 rounded font-bold text-lg uppercase tracking-wider transition-all hover:brightness-110 hover:scale-105 mx-auto"
                 style={{ backgroundColor: "#E50914", color: "#fff" }}
               >
                 <Play size={20} fill="white" />
@@ -256,7 +438,7 @@ export default function App() {
               style={{ borderColor: "#E50914" }}
             >
               <img
-                src={PHOTOS[2]}
+                src={MEMORIES[2].src}
                 alt="Anvi"
                 className="w-full h-full object-cover"
               />
@@ -286,24 +468,6 @@ export default function App() {
           />
         ))}
 
-        {/* Photo fallback when no video active (very brief) */}
-        {PHOTOS.map((photo, i) => (
-          <div
-            key={photo}
-            className="absolute inset-0 transition-opacity duration-[1500ms]"
-            style={{
-              opacity: i === currentSlide && showStartOverlay ? 1 : 0,
-              zIndex: -1,
-            }}
-          >
-            <img
-              src={photo}
-              alt={PHOTO_LABELS[i]}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        ))}
-
         {/* Cinematic dark overlay */}
         <div
           className="absolute inset-0 z-[1]"
@@ -312,7 +476,6 @@ export default function App() {
               "linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0.55) 65%, rgba(11,11,11,1) 100%)",
           }}
         />
-        {/* Side vignettes for cinematic feel */}
         <div
           className="absolute inset-y-0 left-0 w-32 z-[1]"
           style={{
@@ -327,7 +490,6 @@ export default function App() {
               "linear-gradient(to left, rgba(0,0,0,0.6), transparent)",
           }}
         />
-        {/* Letterbox bars */}
         <div
           className="absolute top-0 left-0 right-0 h-14 z-[1]"
           style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
@@ -362,9 +524,24 @@ export default function App() {
               <span style={{ color: "#fff" }}>ANVI&apos;S </span>
               <span style={{ color: "#E50914" }}>BIG DAY</span>
             </h1>
+
+            {/* Age badge row */}
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold"
+                style={{ backgroundColor: "#E50914", color: "#fff" }}
+              >
+                <Cake size={13} />
+                17
+              </span>
+              <span className="text-sm" style={{ color: "#B3B3B3" }}>
+                Born 2009 · Turning 17 on April 5
+              </span>
+            </div>
+
             <p className="text-base md:text-lg mb-8" style={{ color: "#ccc" }}>
-              You deserve every good thing that's coming your way — starting
-              April 5.
+              Turning 17 and absolutely thriving. You deserve every good thing
+              that&apos;s coming your way — starting April 5.
             </p>
 
             {isPast ? (
@@ -565,8 +742,127 @@ export default function App() {
                   </div>
                 </motion.div>
               ))}
+
+              {/* Video cards */}
+              {VIDEO_MEMORIES.map((v, i) => (
+                <VideoCard key={v.src} video={v} index={i} />
+              ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* AGE MILESTONES SECTION */}
+      <section
+        className="py-16 px-4 md:px-8"
+        style={{ backgroundColor: "#0b0b0b" }}
+        {...ocid("milestones.section")}
+      >
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center gap-4 mb-8">
+            <div
+              className="w-1 h-8 rounded"
+              style={{ backgroundColor: "#E50914" }}
+            />
+            <h2
+              className="text-2xl md:text-3xl font-bold uppercase tracking-widest"
+              style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                letterSpacing: "0.2em",
+              }}
+            >
+              17 Years of Anvi
+            </h2>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="rounded-xl p-8 relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, #161616 0%, #0d0d0d 100%)",
+              border: "1px solid #2A2A2A",
+            }}
+          >
+            {/* Glow accent */}
+            <div
+              className="absolute -top-12 -right-12 w-48 h-48 rounded-full opacity-15 blur-3xl"
+              style={{ backgroundColor: "#E50914" }}
+            />
+            <div
+              className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full opacity-10 blur-3xl"
+              style={{ backgroundColor: "#E50914" }}
+            />
+
+            {/* Intro text */}
+            <div className="mb-8 relative">
+              <p
+                className="text-base leading-relaxed"
+                style={{ color: "#ccc" }}
+              >
+                From{" "}
+                <span style={{ color: "#E50914", fontWeight: 700 }}>2009</span>{" "}
+                to{" "}
+                <span style={{ color: "#E50914", fontWeight: 700 }}>2026</span>{" "}
+                — 17 years of being exactly who you are. Here&apos;s what those
+                years look like in numbers:
+              </p>
+            </div>
+
+            {/* Stats grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {AGE_STATS.map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  className="flex flex-col items-center justify-center p-5 rounded-lg text-center relative overflow-hidden"
+                  style={{
+                    background: "rgba(229,9,20,0.07)",
+                    border: "1px solid rgba(229,9,20,0.25)",
+                  }}
+                >
+                  <span
+                    className="text-3xl md:text-4xl font-black leading-none mb-1"
+                    style={{
+                      fontFamily: "'Bebas Neue', sans-serif",
+                      color: "#E50914",
+                      textShadow: "0 0 20px rgba(229,9,20,0.5)",
+                    }}
+                  >
+                    {stat.value}
+                  </span>
+                  <span
+                    className="text-xs font-semibold uppercase tracking-wider"
+                    style={{ color: "#B3B3B3" }}
+                  >
+                    {stat.label}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Fun fact strip */}
+            <div
+              className="mt-6 p-4 rounded-lg flex items-center gap-3"
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid #2A2A2A",
+              }}
+            >
+              <Cake size={18} style={{ color: "#E50914", flexShrink: 0 }} />
+              <p className="text-sm" style={{ color: "#B3B3B3" }}>
+                Born <strong style={{ color: "#fff" }}>April 5, 2009</strong> ·
+                That makes April 5, 2026 your official{" "}
+                <strong style={{ color: "#E50914" }}>17th birthday</strong> · 17
+                years of smiles, laughs, and being absolutely unforgettable.
+              </p>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -615,7 +911,7 @@ export default function App() {
                 style={{ borderColor: "#E50914" }}
               >
                 <img
-                  src={PHOTOS[2]}
+                  src={MEMORIES[2].src}
                   alt="Anvi"
                   className="w-full h-full object-cover"
                 />
@@ -637,16 +933,16 @@ export default function App() {
                   className="text-base leading-relaxed mb-4"
                   style={{ color: "#ccc" }}
                 >
-                  You make people around you feel genuinely seen. There's
+                  You make people around you feel genuinely seen. There&apos;s
                   something rare about the way you show up — honest, warm, and
                   always yourself. April 5 is just a date on the calendar, but
-                  to the people who know you, it's the day someone truly special
-                  came into this world. Here's to you, Anvi.
+                  to the people who know you, it&apos;s the day someone truly
+                  special came into this world. Here&apos;s to you, Anvi.
                 </p>
                 <div className="flex items-center gap-2">
                   <Heart size={14} fill="#E50914" color="#E50914" />
                   <span className="text-sm" style={{ color: "#B3B3B3" }}>
-                    April 5, 2026 — Happy Birthday
+                    Turning 17 on April 5, 2026
                   </span>
                 </div>
               </div>
@@ -675,7 +971,7 @@ export default function App() {
               fill="#E50914"
               color="#E50914"
             />{" "}
-            for Anvi · April 5, 2026
+            for Anvi · Turning 17 on April 5, 2026
           </p>
           <p className="text-xs" style={{ color: "#444" }}>
             © {new Date().getFullYear()}.{" "}
